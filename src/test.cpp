@@ -27,16 +27,21 @@ void clear_cache(){
 int main(int argc, char* argv[]){
     const size_t initialTableSize = 16*1024;
     size_t numData = atoi(argv[1]);
+	size_t numShards;
 #ifdef MULTITHREAD
     size_t numThreads = atoi(argv[2]);
+	numShards = atoi(argv[3]); //number of shard as input
+#else
+	numShards = 1;
 #endif
-
+	
     struct timespec start, end;
     uint64_t* keys = (uint64_t*)malloc(sizeof(uint64_t)*numData);
 
     ifstream ifs;
-    string dataset = "/home/chahg0129/dataset/input_rand.txt";
-    ifs.open(dataset);
+//    string dataset = "/home/chahg0129/dataset/input_rand.txt";
+	string dataset = "/home/seoyeong/CCEH/util/data";
+	ifs.open(dataset);
     if(!ifs){
 	cerr << "no file" << endl;
 	return 0;
@@ -48,8 +53,44 @@ int main(int argc, char* argv[]){
     }
     cout << "Reading dataset Completed" << endl;
 
-    
-    Hash* table = new CCEH(initialTableSize/Segment::kNumSlot);
+	Hash *shard0, *shard1,*shard2, *shard3, *shard4, *shard5;
+
+    switch(numShards){
+        case 1:
+            shard0 = new CCEH(initialTableSize/Segment:: kNumSlot);
+            break;
+        case 2:
+            shard0 = new CCEH(initialTableSize/Segment:: kNumSlot);
+            shard1 = new CCEH(initialTableSize/Segment:: kNumSlot);
+            break;
+        case 3:
+            shard0 = new CCEH(initialTableSize/Segment:: kNumSlot);
+            shard1 = new CCEH(initialTableSize/Segment:: kNumSlot);
+            shard2 = new CCEH(initialTableSize/Segment:: kNumSlot);
+            break;
+        case 4:
+            shard0 = new CCEH(initialTableSize/Segment:: kNumSlot);
+            shard1 = new CCEH(initialTableSize/Segment:: kNumSlot);
+            shard2 = new CCEH(initialTableSize/Segment:: kNumSlot);
+            shard3 = new CCEH(initialTableSize/Segment:: kNumSlot);
+            break;
+        case 5:
+            shard0 = new CCEH(initialTableSize/Segment:: kNumSlot);
+            shard1 = new CCEH(initialTableSize/Segment:: kNumSlot);
+            shard2 = new CCEH(initialTableSize/Segment:: kNumSlot);
+            shard3 = new CCEH(initialTableSize/Segment:: kNumSlot);
+            shard4 = new CCEH(initialTableSize/Segment:: kNumSlot);
+            break;
+        case 6:
+            shard0 = new CCEH(initialTableSize/Segment:: kNumSlot);
+            shard1 = new CCEH(initialTableSize/Segment:: kNumSlot);
+            shard2 = new CCEH(initialTableSize/Segment:: kNumSlot);
+            shard3 = new CCEH(initialTableSize/Segment:: kNumSlot);
+            shard4 = new CCEH(initialTableSize/Segment:: kNumSlot);
+            shard5 = new CCEH(initialTableSize/Segment:: kNumSlot);
+            break;
+    }
+
     cout << "Hashtable Initialized" << endl;
 
 #ifndef MULTITHREAD
@@ -57,7 +98,7 @@ int main(int argc, char* argv[]){
     clear_cache();
     clock_gettime(CLOCK_MONOTONIC, &start);
     for(int i=0; i<numData; i++){
-	table->Insert(keys[i], reinterpret_cast<Value_t>(keys[i]));
+	shard0->Insert(keys[i], reinterpret_cast<Value_t>(keys[i]));
     }
     clock_gettime(CLOCK_MONOTONIC, &end);
 
@@ -70,7 +111,7 @@ int main(int argc, char* argv[]){
     int failedSearch = 0;
     clock_gettime(CLOCK_MONOTONIC, &start);
     for(int i=0; i<numData; i++){
-	auto ret = table->Get(keys[i]);
+	auto ret = shard0->Get(keys[i]);
 	if(ret != reinterpret_cast<Value_t>(keys[i]))
 	    failedSearch++;
     }
@@ -84,19 +125,80 @@ int main(int argc, char* argv[]){
     vector<thread> searchingThreads;
     vector<int> failed(numThreads);
 
-    auto insert = [&table, &keys](int from, int to){
+    auto insert = [&shard0, &shard1, &shard2, &shard3, &shard4, &shard5, &keys, &numShards](int from, int to){
 	for(int i=from; i<to; i++){
-	    table->Insert(keys[i], reinterpret_cast<Value_t>(keys[i]));
+		size_t shardid =keys[i]%numShards;
+		switch(shardid){
+			case 0:
+				shard0->Insert(keys[i], reinterpret_cast<Value_t>(keys[i]));
+				break;
+			case 1:
+				shard1->Insert(keys[i], reinterpret_cast<Value_t>(keys[i]));
+				break;
+			case 2:
+				shard2->Insert(keys[i], reinterpret_cast<Value_t>(keys[i]));
+				break;
+			case 3:
+				shard3->Insert(keys[i], reinterpret_cast<Value_t>(keys[i]));
+				break;
+			case 4:
+				shard4->Insert(keys[i], reinterpret_cast<Value_t>(keys[i]));
+				break;
+			case 5:
+				shard5->Insert(keys[i], reinterpret_cast<Value_t>(keys[i]));
+				break;
+		}
 	}
     };
     
-    auto search = [&table, &keys, &failed](int from, int to, int tid){
+    auto search = [&shard0, &shard1, &shard2, &shard3, &shard4, &shard5, &keys, &failed, &numShards](int from, int to, int tid){
 	int fail = 0;
 	for(int i=from; i<to; i++){
-	    auto ret = table->Get(keys[i]);
-	    if(ret != reinterpret_cast<Value_t>(keys[i])){
-		fail++;
-	    }
+		size_t shardid = keys[i]%numShards;
+		switch(shardid){
+			case 0:{
+				auto ret = shard0->Get(keys[i]);
+				if(ret != reinterpret_cast<Value_t>(keys[i])){
+					fail++;
+				}
+				break;
+				   }
+            case 1:{
+                auto ret1 = shard1->Get(keys[i]);
+                if(ret1 != reinterpret_cast<Value_t>(keys[i])){
+                    fail++;
+                }   
+                break;
+				   }
+            case 2:{
+                auto ret2 = shard2->Get(keys[i]);
+                if(ret2 != reinterpret_cast<Value_t>(keys[i])){
+                    fail++;
+                }   
+                break;
+				   }
+            case 3:{
+                auto ret3 = shard3->Get(keys[i]);
+                if(ret3 != reinterpret_cast<Value_t>(keys[i])){
+                    fail++;
+                }   
+                break;
+				   }
+            case 4:{
+                auto ret4 = shard4->Get(keys[i]);
+                if(ret4 != reinterpret_cast<Value_t>(keys[i])){
+                    fail++;
+                }   
+                break;
+				   }
+            case 5:{
+                auto ret5 = shard5->Get(keys[i]);
+                if(ret5 != reinterpret_cast<Value_t>(keys[i])){
+                    fail++;
+                }   
+                break;
+				   }
+		}
 	}
 	failed[tid] = fail;
     };
@@ -114,7 +216,7 @@ int main(int argc, char* argv[]){
 
     for(auto& t: insertingThreads) t.join();
     clock_gettime(CLOCK_MONOTONIC, &end);
-    cout << "NumData(" << numData << "), numThreads(" << numThreads << ")" << endl;
+    cout << "NumData(" << numData << "), numThreads(" << numThreads << "), numShards(" << numShards << ")" << endl;
     uint64_t elapsed = end.tv_nsec - start.tv_nsec + (end.tv_sec - start.tv_sec)*1000000000;
     cout << "Insertion: " << elapsed/1000 << " usec\t" << (uint64_t)(1000000*(numData/(elapsed/1000.0))) << " ops/sec" << endl;
 
@@ -139,10 +241,27 @@ int main(int argc, char* argv[]){
     cout << failedSearch << " failedSearch" << endl;
 #endif
 
-    auto util = table->Utilization();
-    auto cap = table->Capacity();
+    auto util = shard0->Utilization();
+    auto cap = shard0->Capacity();
 
-    cout << "Util( " << util << " ), Capacity( " << cap << " )" << endl;
+    cout << "Shard0 Util( " << util << " ), Capacity( " << cap << " )" << endl;
+	
+	if(numShards !=1){
+		auto util2 = shard1->Utilization();
+		auto cap2 = shard1->Capacity();
+		cout << "Shard1 Util( " << util2 << " ), Capacity( " << cap2 << " )" << endl;
+	}
+    if(numShards == 4){
+        auto util3 = shard2->Utilization();
+        auto cap3 = shard2->Capacity();
+		auto util4 = shard3->Utilization();
+        auto cap4 = shard3->Capacity();
+
+        cout << "Shard2 Util( " << util3 << " ), Capacity( " << cap3 << " )" << endl;
+		cout << "Shard3 Util( " << util4 << " ), Capacity( " << cap4 << " )" << endl;
+
+	}	
+
     return 0;
 }
 

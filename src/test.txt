@@ -1,0 +1,38 @@
+/home/seoyeong/CCEH/util/data is used
+Reading dataset Completed
+Start Insertion
+NumData(10000000), numThreads(1)
+Insertion: 6731278 usec	1485601 ops/sec
+Start Search
+Search: 3371631 usec	2965922 ops/sec
+0 failedSearch
+/home/seoyeong/CCEH/util/data is used
+Reading dataset Completed
+Start Insertion
+NumData(10000000), numThreads(2)
+Insertion: 16676358 usec	599651 ops/sec
+Start Search
+Search: 3341458 usec	2992705 ops/sec
+0 failedSearch
+/home/seoyeong/CCEH/util/data is used
+Reading dataset Completed
+Start Insertion
+NumData(10000000), numThreads(3)
+Insertion: 42367261 usec	236031 ops/sec
+Start Search
+Search: 3423020 usec	2921396 ops/sec
+0 failedSearch
+/home/seoyeong/CCEH/util/data is used
+Reading dataset Completed
+Start Insertion
+NumData(10000000), numThreads(4)
+Insertion: 81143694 usec	123238 ops/sec
+Start Search
+Search: 3463050 usec	2887627 ops/sec
+0 failedSearch
+/home/seoyeong/CCEH/util/data is used
+Reading dataset Completed
+Start Insertion
+NumData(10000000), numThreads(5)
+Insertion: 90354210 usec	110675 ops/sec
+Start Search
